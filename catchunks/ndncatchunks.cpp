@@ -134,16 +134,16 @@ main(int argc, char** argv)
   po::options_description cubicPipeDesc("CUBIC pipeline options");
   cubicPipeDesc.add_options()
     ("cubic-debug-cwnd", po::value<std::string>(&cwndPath),
-     "log file for CUBIC cwnd statistics")
+     "log file for TCP-CUBIC cwnd statistics")
     ("cubic-debug-rtt", po::value<std::string>(&rttPath),
-     "log file for CUBIC rtt statistics");
+     "log file for TCP-CUBIC rtt statistics");
 
   po::options_description tcpbicDesc("TCPBIC pipeline options");
   tcpbicDesc.add_options()
     ("tcpbic-debug-cwnd", po::value<std::string>(&cwndPath),
-     "log file for CUBIC cwnd statistics")
+     "log file for TCP-BIC cwnd statistics")
     ("tcpbic-debug-rtt", po::value<std::string>(&rttPath),
-     "log file for CUBIC rtt statistics");
+     "log file for TCP-BIC rtt statistics");
 
   po::options_description visibleDesc;
   visibleDesc.add(basicDesc).add(iterDiscoveryDesc).add(fixedPipeDesc)
