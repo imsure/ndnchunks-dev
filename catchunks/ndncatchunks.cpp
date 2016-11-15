@@ -63,7 +63,7 @@ main(int argc, char** argv)
   double aiStep(1.0), mdCoef(0.5), alpha(0.125), beta(0.25),
          minRto(200.0), maxRto(4000.0), rateInterval(0.1);
   int initCwnd(1), initSsthresh(std::numeric_limits<int>::max()), k(4);
-  std::string cwndPath, rttPath, ratePath;
+  std::string cwndPath, rttPath, ratePath, summaryPath;
 
   namespace po = boost::program_options;
   po::options_description basicDesc("Basic Options");
@@ -80,6 +80,7 @@ main(int argc, char** argv)
                     "maximum number of retries in case of Nack or timeout (-1 = no limit)")
     ("verbose,v",   po::bool_switch(&options.isVerbose), "turn on verbose output")
     ("version,V",   "print program version and exit")
+    ("summary,S", po::value<std::string>(&summaryPath), "log file for summary statistics")
     ;
 
   po::options_description iterDiscoveryDesc("Iterative version discovery options");
@@ -238,6 +239,7 @@ main(int argc, char** argv)
     std::ofstream statsFileCwnd;
     std::ofstream statsFileRtt;
     std::ofstream statsFileRate;
+    std::ofstream summaryFile;
 
     if (pipelineType == "fixed") {
       PipelineInterestsFixedWindow::Options optionsPipeline(options);
@@ -266,7 +268,18 @@ main(int argc, char** argv)
       optionsPipeline.mdCoef = mdCoef;
       optionsPipeline.rateInterval = rateInterval;
 
-      auto aimdPipeline = make_unique<PipelineInterestsAimd>(face, *rttEstimator, *rateEstimator, optionsPipeline);
+      if (!summaryPath.empty()) {
+        summaryFile.open(summaryPath);
+        optionsPipeline.writeSummary = true;
+        if (summaryFile.fail()) {
+          std::cerr << "ERROR: failed to open " << summaryPath << std::endl;
+          return 4;
+        }
+      }
+
+      auto aimdPipeline = make_unique<PipelineInterestsAimd>(face, *rttEstimator,
+                                                             *rateEstimator, optionsPipeline,
+                                                             summaryPath.empty() ? std::cerr : summaryFile);
 
       if (!cwndPath.empty() || !rttPath.empty() || !ratePath.empty()) {
         if (!cwndPath.empty()) {

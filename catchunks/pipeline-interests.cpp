@@ -48,6 +48,7 @@ PipelineInterests::run(const Data& data, DataCallback onData, FailureCallback on
 {
   BOOST_ASSERT(onData != nullptr);
   m_onData = std::move(onData);
+  std::cerr << "Before running pipeline\n";
   m_onFailure = std::move(onFailure);
   m_prefix = data.getName().getPrefix(-1);
   m_excludedSegmentNo = data.getName()[-1].toSegment();

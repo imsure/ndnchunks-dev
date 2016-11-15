@@ -81,6 +81,7 @@ void PipelineInterestsCubic::doCancel()
 	}
 	m_segmentInfo.clear();
 	m_scheduler.cancelAllEvents();
+	m_face.getIoService().stop();
 }
 
 void PipelineInterestsCubic::checkRate()

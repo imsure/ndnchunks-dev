@@ -32,15 +32,36 @@ namespace chunks {
 namespace aimd {
 
 PipelineInterestsAimd::PipelineInterestsAimd(Face& face, RttEstimator& rttEstimator,
-		RateEstimator& rateEstimator, const Options& options)
-		: PipelineInterests(face), m_options(options), m_rttEstimator(rttEstimator), m_rateEstimator(
-				rateEstimator), m_scheduler(m_face.getIoService()), m_nextSegmentNo(0), m_receivedSize(0), m_highData(
-				0), m_highInterest(0), m_recPoint(0), m_nInFlight(0), m_nReceived(0), m_nLossEvents(0), m_nRetransmitted(
-				0), m_cwnd(m_options.initCwnd), m_ssthresh(m_options.initSsthresh), m_hasFailure(false), m_failedSegNo(
-				0), m_nPackets(0), m_nBits(0)
+											 RateEstimator& rateEstimator,
+											 const Options& options, std::ostream& osSummary)
+	: PipelineInterests(face)
+	, m_options(options)
+	, m_rttEstimator(rttEstimator)
+	, m_rateEstimator(rateEstimator)
+	, m_scheduler(m_face.getIoService())
+	, m_nextSegmentNo(0)
+	, m_receivedSize(0)
+	, m_highData(0)
+	, m_highInterest(0)
+	, m_recPoint(0)
+	, m_nInFlight(0)
+	, m_nReceived(0)
+	, m_nLossEvents(0)
+	, m_nRetransmitted(0)
+	, m_cwnd(m_options.initCwnd)
+	, m_ssthresh(m_options.initSsthresh)
+	, m_hasFailure(false)
+	, m_failedSegNo(0)
+	, m_nPackets(0)
+	, m_nBits(0)
+	, m_osSummary(osSummary)
 {
 	if (m_options.isVerbose) {
 		std::cerr << m_options;
+	}
+
+	if (m_options.writeSummary) {
+		m_osSummary << m_options;
 	}
 }
 
@@ -281,7 +302,10 @@ void PipelineInterestsAimd::handleData(const Interest& interest, const Data& dat
 	if (m_hasFinalBlockId && m_nReceived - 1 >= m_lastSegmentNo) { // all segments have been received
 		cancel();
 		if (m_options.isVerbose) {
-			printSummary();
+			printSummary(std::cerr);
+		}
+		if (m_options.writeSummary) {
+			printSummary(m_osSummary);
 		}
 	}
 	else {
@@ -426,7 +450,7 @@ void PipelineInterestsAimd::cancelInFlightSegmentsGreaterThan(uint64_t segmentNo
 	}
 }
 
-void PipelineInterestsAimd::printSummary() const
+void PipelineInterestsAimd::printSummary(std::ostream& os) const
 {
 	Milliseconds timePassed = time::steady_clock::now() - m_startTime;
 	double throughput = (8 * m_receivedSize * 1000) / timePassed.count();
@@ -455,7 +479,7 @@ void PipelineInterestsAimd::printSummary() const
 		break;
 	}
 
-	std::cerr << "\nAll segments have been received.\n" << "Total # of segments received: "
+	os << "\nAll segments have been received.\n" << "Total # of segments received: "
 			<< m_nReceived << "\n" << "Time used: " << timePassed.count() << " ms" << "\n"
 			<< "Total # of packet loss burst: " << m_nLossEvents << "\n" << "Packet loss rate: "
 			<< static_cast<double>(m_nLossEvents) / static_cast<double>(m_nReceived) << "\n"

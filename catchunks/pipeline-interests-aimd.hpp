@@ -47,7 +47,8 @@ struct PipelineInterestsAimdOptions : public Options
   time::milliseconds rtoCheckInterval = time::milliseconds(10); ///<  time interval for checking retransmission timer
   bool disableCwa = false; ///< disable Conservative Window Adaptation
   bool resetCwndToInit = false; ///< reduce cwnd to initCwnd when loss event occurs
-  double rateInterval = 0.1; 
+  double rateInterval = 0.1;
+  bool writeSummary = false;
 };
 
 /**
@@ -102,7 +103,8 @@ public:
   PipelineInterestsAimd(Face& face,
                         RttEstimator& rttEstimator,
                         RateEstimator& rateEstimator,
-                        const Options& options = Options());
+                        const Options& options = Options(),
+                        std::ostream& osSummary = std::cerr);
 
   ~PipelineInterestsAimd() final;
 
@@ -187,7 +189,7 @@ private:
   cancelInFlightSegmentsGreaterThan(uint64_t segmentNo);
 
   void
-  printSummary() const;
+  printSummary(std::ostream& os) const;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   const Options m_options;
@@ -227,6 +229,8 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   //for Rate measurement
   uint64_t m_nPackets;
   uint64_t m_nBits;
+
+  std::ostream& m_osSummary; // output stream for summary data
 };
 
 std::ostream&
